@@ -1,0 +1,4 @@
+- Thomas Steinmann <thomas.steinmann@inf.ethz.ch>: Implementation
+- Marc Willhaus <marc.willhaus@inf.ethz.ch>: Implementation of additional functionality
+- Daniel Vera Nieto <daniel.veranieto@inf.ethz.ch>: Implementation of additional functionality
+

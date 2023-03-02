@@ -1,0 +1,15 @@
+#  SPDX-License-Identifier: Apache-2.0
+#  © 2023 ETH Zurich and other contributors, see AUTHORS.txt for details
+
+version: "3.9"  # optional since v1.27.0
+services:
+  # Runs all tests using discovery. Disabled by default using profiles
+  # Ideally, create one service per test instead, so that they can be run in parallel and logs can be grouped by service.
+  api-utils-tests:
+    container_name: api-utils-tests
+    image: api-utils-tests
+    build:
+      context: .
+    command: python -m unittest discover
+    env_file:
+      - .env

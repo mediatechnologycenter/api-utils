@@ -1,0 +1,7 @@
+#  SPDX-License-Identifier: Apache-2.0
+#  © 2023 ETH Zurich and other contributors, see AUTHORS.txt for details
+
+version: "3.9"  # optional since v1.27.0
+services: {
+  # Currently no services, check docker-compose-tests-yml for test configurations
+}
