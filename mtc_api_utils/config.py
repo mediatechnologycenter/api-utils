@@ -110,23 +110,33 @@ class Config(ConfigBuilder):
             APIConfig.backend_url
     """
 
+    # Init global vars
+
     # Deployment
-    gpu_supported = ConfigBuilder.parse_env_var("GPU_SUPPORTED", convert_type=bool, default="False")
-    gpu_enabled = ConfigBuilder.parse_env_var("GPU_ENABLED", convert_type=bool, default="False")
+    gpu_supported = ConfigBuilder.parse_env_var("GPU_SUPPORTED", convert_type=bool)
+    gpu_enabled = ConfigBuilder.parse_env_var("GPU_ENABLED", convert_type=bool)
     backend_url: str = ConfigBuilder.parse_env_var("BACKEND_URL", default="http://localhost:5000")
 
+    # PolyBox
+    polybox_usr = ConfigBuilder.parse_env_var("POLYBOX_USR")
+    polybox_pwd = ConfigBuilder.parse_env_var("POLYBOX_PWD")
+    polybox_credentials = (ConfigBuilder.parse_env_var("POLYBOX_USR"), ConfigBuilder.parse_env_var("POLYBOX_PWD"))
+
     # Auth
-    cors_allow_origins: List[str] = ConfigBuilder.parse_env_var("CORS_ALLOW_ORIGINS", convert_type=list, default="http://localhost,http://localhost:80,http://localhost:8080")
-    auth_enabled: bool = ConfigBuilder.parse_env_var("AUTH_ENABLED", convert_type=bool, default="False")
+    cors_allow_origins: List[str] = ConfigBuilder.parse_env_var("CORS_ALLOW_ORIGINS", convert_type=list, default="")
+    auth_enabled: bool = ConfigBuilder.parse_env_var("AUTH_ENABLED", convert_type=bool, default="True")
 
     # Firebase
     # Required for firebase auth verification
-    firebase_auth_service_account_url = ConfigBuilder.parse_env_var("FIREBASE_AUTH_SERVICE_ACCOUNT_CREDENTIALS_URL", default="NOT USED")
+    firebase_auth_service_account_url = ConfigBuilder.parse_env_var(
+        "FIREBASE_AUTH_SERVICE_ACCOUNT_CREDENTIALS_URL",
+        default="https://polybox.ethz.ch/remote.php/dav/files/mtc_polybox/repo/credentials/dev-firebase-auth-key.json",
+    )
     service_account_dir: str = ConfigBuilder.parse_env_var(env_var_name="SERVICE_ACCOUNT_DIR", default="/tmp/gcloud")
 
     required_roles: List[str] = ConfigBuilder.parse_env_var(
         "REQUIRED_AUTH_ROLES",
-        default=f"NOT USED",
+        default=f"",
         convert_type=list
     )
     required_roles.append(AuthenticationRole.admin.value)

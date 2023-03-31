@@ -1,12 +1,15 @@
 #  SPDX-License-Identifier: Apache-2.0
 #  © 2023 ETH Zurich and other contributors, see AUTHORS.txt for details
 
+from __future__ import annotations
+
 import inspect
 from enum import Enum
 from http import HTTPStatus
-from typing import Callable, Type, Tuple, Union, Awaitable, TypeVar
+from typing import Callable, Type, Tuple, Union, Awaitable, TypeVar, Optional, AsyncContextManager
 
 from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi.openapi.models import Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
@@ -51,15 +54,30 @@ class BaseApi(FastAPI):
             index_message: str = "Welcome to the MTC Api",
             liveness_message: str = "liveness check: [ok]",
             docs_route_prefix: str = "/api",
-            tags: Tuple[str] = (StandardTags.demo.value,)
+            tags: Tuple[str] = (StandardTags.demo.value,),
+            lifespan: Optional[Callable[[BaseApi], AsyncContextManager]] = None,
+            global_readiness_middleware_enabled: bool = True,
     ):
-        super().__init__(docs_url=f"{docs_route_prefix}/docs", redoc_url=f"{docs_route_prefix}/redoc", openapi_url=f"{docs_route_prefix}/openapi.json")
+        """
+            Parameters:
+                * is_ready: Accepts either a function or coroutine which return whether the service is ready to accept requests or not.
+                * config: The Config object. This is used to configure various variables such as CORS & GPU settings
+                * tags: Returned as part of the /status call in order to determine the kind of service that is responding, e.g. demo/dashboard, etc.
+                * lifespan: The lifespan callback that is executed before starting / after stopping the api server.
+                * global_readiness_middleware_enabled: If true, evaluates the is_ready function before accepting any request to routes defined in the app. Base Operation calls such as /liveness, /readiness & /status are excepted. Set to false if more granular control is required and add the ReadinessMiddleware to each route/router/subapp manually.
+
+        """
+        super().__init__(
+            docs_url=f"{docs_route_prefix}/docs",
+            redoc_url=f"{docs_route_prefix}/redoc",
+            openapi_url=f"{docs_route_prefix}/openapi.json",
+            lifespan=lifespan,
+        )
 
         self._is_ready = is_ready
         self.config = config
 
         self.index_message = index_message
-
         self.liveness_message = liveness_message
 
         self.tags = tags
@@ -67,7 +85,8 @@ class BaseApi(FastAPI):
         # Create and include shared base routes
         self.include_router(self.create_base_router())
 
-        self.add_middleware(ReadinessMiddleware, base_api=self)
+        if global_readiness_middleware_enabled:
+            self.add_middleware(ReadinessMiddleware, base_api=self)
 
         if config.cors_allow_origins:
             self.add_middleware(
@@ -133,17 +152,30 @@ class ReadinessMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app: ASGIApp, base_api: BaseApi):
         super().__init__(app)
-        self.baseApi = base_api
+        self.base_api = base_api
 
-    async def dispatch(self, request, call_next):
+    async def dispatch(self, request, call_next) -> Union[Response, JSONResponse]:
         # If route is default route or api is ready, perform call
-        if any([request.url.path.startswith(route.value) for route in DefaultRoute]) or await self.baseApi.is_ready():
+        if any([request.url.path.startswith(route.value) for route in DefaultRoute]) or await self.base_api.is_ready():
             return await call_next(request)
 
         # If route is demo specific and model is not ready, raise error
         else:
-            if not await self.baseApi.is_ready():
+            if not await self.base_api.is_ready():
                 return JSONResponse(
                     content=service_unavailable_exception.detail,
                     status_code=service_unavailable_exception.status_code,
                 )
+
+    async def raise_if_not_ready(self) -> None:
+        if not await self.base_api.is_ready():
+            raise service_unavailable_exception
+
+
+class RequireReadinessDependency:
+    def __init__(self, base_api: BaseApi):
+        self.base_api = base_api
+
+    async def __call__(self):
+        if not await self.base_api.is_ready():
+            raise service_unavailable_exception

@@ -87,7 +87,26 @@ class ApiClient:
 
         return resp, status
 
-    # TODO: Implement async wait -> minor API change
+    def wait_for_service_liveness(self, timeout: timedelta = timedelta(minutes=1)) -> None:
+        start = datetime.now()
+        err: Optional[Exception] = None
+
+        while datetime.now() - start <= timeout:
+            try:
+                _, is_live = self.get_liveness()
+                if is_live:
+                    return
+            except httpx.HTTPStatusError as err:
+                pass
+
+            time.sleep(3)
+
+        message = f"Service did not become live before timeout: {timeout}"
+        if err is not None:
+            message += f". The following exception was raised while waiting: {err}"
+
+        raise HTTPException(detail=message, status_code=HTTPStatus.SERVICE_UNAVAILABLE)
+
     def wait_for_service_readiness(self, timeout: timedelta = timedelta(minutes=3)) -> None:
         """
         Wait for a given service to be ready. This method should only ever be used in tests as it implements a busy wait.
@@ -109,7 +128,27 @@ class ApiClient:
         if err is not None:
             message += f". The following exception was raised while waiting: {err}"
 
-        raise HTTPException(detail=f"Service did not become ready before timeout: {timeout}", status_code=HTTPStatus.SERVICE_UNAVAILABLE)
+        raise HTTPException(detail=message, status_code=HTTPStatus.SERVICE_UNAVAILABLE)
+
+    async def wait_for_service_liveness_async(self, timeout: timedelta = timedelta(minutes=1)) -> None:
+        start = datetime.now()
+        err: Optional[Exception] = None
+
+        while datetime.now() - start <= timeout:
+            try:
+                _, is_live = self.get_liveness()
+                if is_live:
+                    return
+            except httpx.HTTPStatusError as err:
+                pass
+
+            await sleep(2)
+
+        message = f"Service did not become live before timeout: {timeout}"
+        if err is not None:
+            message += f". The following exception was raised while waiting: {err}"
+
+        raise HTTPException(detail=message, status_code=HTTPStatus.SERVICE_UNAVAILABLE)
 
     async def wait_for_service_readiness_async(self, timeout: timedelta = timedelta(minutes=3)) -> None:
         start = datetime.now()

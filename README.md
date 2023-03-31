@@ -7,7 +7,7 @@ Provides a common starting framework for all MTC backend APIs
 This module can be installed using pip as follows:
 
 ```
-pip install git+https://github.com/mediatechnologycenter/api-utils.git
+pip install git+ssh://git@gitlab.ethz.ch/mtc/libraries/api-utils.git
 ```
 
 The same can also be achieved by adding the following block to your `requirements.txt` file:
@@ -15,8 +15,10 @@ The same can also be achieved by adding the following block to your `requirement
 ```
 # MTC API Utils package
 
-git+https://github.com/mediatechnologycenter/api-utils.git
+git+ssh://git@gitlab.ethz.ch/mtc/libraries/api-utils.git
 ```
+
+In order to import the `api-utils` library in a `Dockerfile`, add the relevant deployment SSH keys to your image beforehand.
 
 # Earlier versions
 
@@ -24,7 +26,7 @@ The main branch generally contains the latest version of the `api-utils` library
 name or tag to the url as follows:
 
 ```
-git+https://github.com/mediatechnologycenter/api-utils.git
+git+ssh://git@gitlab.ethz.ch/mtc/libraries/api-utils.git@v1
 ```
 
 where `v1` is the branch/tag that should be used.

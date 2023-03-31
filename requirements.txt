@@ -1,12 +1,12 @@
 #  SPDX-License-Identifier: Apache-2.0
 #  © 2023 ETH Zurich and other contributors, see AUTHORS.txt for details
 
-fastapi>=0.92.0
+fastapi>=0.95.0
 python-multipart>=0.0.6
-uvicorn>=0.20.0
+uvicorn>=0.21.1
 gunicorn>=20.1.0
 debugpy>=1.6.6
 firebase_admin>=6.1.0
 httpx>=0.23.1
-slack-sdk>=3.20.0
-tqdm>=4.64.1
+slack-sdk>=3.20.2
+tqdm>=4.65.0
