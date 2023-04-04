@@ -3,6 +3,8 @@
 
 from distutils.core import setup
 
+
+
 setup(
     name='mtc_api_utils',
     version='0.5.0',
@@ -19,15 +21,15 @@ setup(
         "mtc_api_utils.clients",
     ],
     install_requires=[
-        "fastapi>=0.89.1",
+        "fastapi>=0.95.0",
         "python-multipart>=0.0.6",
-        "uvicorn>=0.20.0",
+        "uvicorn>=0.21.1",
         "gunicorn>=20.1.0",
         "debugpy>=1.6.6",
-        "firebase_admin>=6.0.1",
-        "slack-sdk>=3.19.4",
+        "firebase_admin>=6.1.0",
+        "slack-sdk>=3.20.2",
         "httpx>=0.23.1",
-        "tqdm>=4.64.1",
+        "tqdm>=4.65.0",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
