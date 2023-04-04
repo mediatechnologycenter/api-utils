@@ -12,7 +12,7 @@ class TestConfig(Config):
 
     firebase_test_project_key: str = Config.parse_env_var(
         env_var_name="FIREBASE_TEST_PROJECT_KEY",
-        default="AIzaSyBn033H95JRoJL1LNHGUXVUMM6cVHZtB8s",
+        default="",
     )
 
     firebase_test_admin_credentials_url: str = Config.parse_env_var(

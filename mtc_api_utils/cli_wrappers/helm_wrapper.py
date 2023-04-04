@@ -7,6 +7,8 @@ from enum import Enum
 from subprocess import CompletedProcess
 from typing import List, Dict
 
+from fastapi import HTTPException
+
 from mtc_api_utils.cli_wrappers.base_cli_wrapper import BaseCLIWrapper, Executable, CLIWrapperException
 from mtc_api_utils.cli_wrappers.git_wrapper import GitWrapper
 
@@ -112,7 +114,12 @@ class HelmClientWrapper(BaseCLIWrapper):
 
         args = [arg for arg in args if arg is not None]
 
-        self._run_command(executable=Executable.helm, args=args)
+        try:
+            self._run_command(executable=Executable.helm, args=args)
+        except CLIWrapperException as e:
+            message = f"An unexpected error occurred when {install_type.value}ing the helm chart with release name: {release_name} from repo: {repo_url} on branch {branch}: \n{e}"
+            print(message)
+            raise HTTPException(status_code=500, detail=message)
 
     def remove(self, release_name: str, namespace: str = "default") -> None:
         args = [
@@ -122,7 +129,12 @@ class HelmClientWrapper(BaseCLIWrapper):
             namespace,
         ]
 
-        self._run_command(Executable.helm, args=args)
+        try:
+            self._run_command(Executable.helm, args=args)
+        except CLIWrapperException as e:
+            message = f"An unexpected error occurred when removing the helm chart with release name: {release_name}: \n{e}"
+            print(message)
+            raise HTTPException(status_code=500, detail=message)
 
     def list(self, namespace: str = None) -> List[str]:
         """
@@ -142,12 +154,17 @@ class HelmClientWrapper(BaseCLIWrapper):
         else:
             args.append("--all-namespaces")
 
-        process = self._run_command(Executable.helm, args=args)
+        try:
+            process = self._run_command(Executable.helm, args=args)
+        except CLIWrapperException as e:
+            message = f"An unexpected error occurred when listing helm releases in namespace: {namespace}: \n{e}"
+            print(message)
+            raise HTTPException(status_code=500, detail=message)
 
         try:
             return json.loads(process.stdout)
         except Exception as e:
-            raise Exception(f"An exception occurred while parsing shell output as json: {process.stdout}: \n{e}")
+            raise HTTPException(status_code=500, detail=f"An exception occurred while parsing shell output as json: {process.stdout}: \n{e}")
 
     def get_project_deployment_status(self, release_name: str, namespace: str = "default") -> bool:
         args = [
@@ -167,7 +184,9 @@ class HelmClientWrapper(BaseCLIWrapper):
                 print(e)
                 return False
             else:
-                raise e
+                message = f"An exception occurred while getting values for helm chart: {release_name}"
+                print(message)
+                raise HTTPException(status_code=500, detail=message)
 
         if "deployProject: true" in output:
             return True
@@ -179,14 +198,19 @@ class HelmClientWrapper(BaseCLIWrapper):
         raise CLIWrapperException("Expected values.deployment.deployProject to be either true or false")
 
     def build_chart_dependencies(self, full_chart_path: str) -> CompletedProcess:
-        return self._run_command(
-            executable=Executable.helm,
-            args=[
-                "dependency",
-                "update",
-            ],
-            working_dir=full_chart_path
-        )
+        try:
+            return self._run_command(
+                executable=Executable.helm,
+                args=[
+                    "dependency",
+                    "update",
+                ],
+                working_dir=full_chart_path
+            )
+        except CLIWrapperException as e:
+            message = f"An unexpected error occurred while building chart dependencies for {full_chart_path}: \n{e}"
+            print(message)
+            raise HTTPException(status_code=500, detail=message)
 
     @classmethod
     def _run_helm_command(cls, namespace: str, args: List[str], value_overrides: Dict[str, str], working_dir: str = None) -> CompletedProcess:

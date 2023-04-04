@@ -25,11 +25,12 @@ class TestFirebaseClientReadonly(unittest.TestCase):
     test_user_access_token: str
 
     def setUp(self) -> None:
-        self.test_user_access_token = firebase_client.login_user(
-            email=TEST_EMAIL,
-            password=TEST_PW,
-            firebase_project_api_key=TestConfig.firebase_test_project_key,
-        )
+        self.test_user_access_token = ""
+        # firebase_client.login_user(
+        #     email=TEST_EMAIL,
+        #     password=TEST_PW,
+        #     firebase_project_api_key=TestConfig.firebase_test_project_key,
+        # )
 
     def get_user(self, expect_success=True):
         try:

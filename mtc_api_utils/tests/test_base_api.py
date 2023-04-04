@@ -322,11 +322,12 @@ class TestBaseApi(unittest.TestCase):
                 roles=[test_role],
             )
 
-        user_access_token = firebase_client.login_user(
-            email=test_email,
-            password=test_pw,
-            firebase_project_api_key=TestConfig.firebase_test_project_key,
-        )
+        user_access_token = ""
+        # firebase_client.login_user(
+        #     email=test_email,
+        #     password=test_pw,
+        #     firebase_project_api_key=TestConfig.firebase_test_project_key,
+        # )
 
         @api.get("/authenticated", response_model=TestResponse)
         async def authenticated_route(firebase_user: FirebaseUser = Depends(authenticated_user)):
